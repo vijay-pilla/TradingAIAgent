@@ -1,0 +1,15 @@
+# Override file for local development
+version: '3.8'
+
+services:
+  trade_genius_agent:
+    environment:
+      - DEBUG=True
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - ./charts:/app/charts
+    # Override the command to use development mode
+    command: ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

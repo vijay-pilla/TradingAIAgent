@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Trade Genius Agent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        .settings-header {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .stock-tag {
+            display: inline-block;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 5px 15px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+        .stock-tag .remove {
+            margin-left: 10px;
+            cursor: pointer;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>
+                <strong>Trade Genius Agent</strong>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <span class="navbar-text">
+                    <i class="fas fa-cog me-1"></i>Settings
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-cog me-2"></i>Trading Agent Settings</h2>
+                        <p class="text-muted mb-0">Configure your trading preferences and notification settings</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="settingsForm">
+                            <!-- Trading Configuration -->
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <h4><i class="fas fa-chart-line me-2"></i>Trading Configuration</h4>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="defaultStocks" class="form-label">Monitored Stocks</label>
+                                            <div id="stockList" class="mb-2">
+                                                {% for stock in current_settings.default_stocks %}
+                                                <span class="stock-tag">{{ stock }}<span class="remove" onclick="removeStock('{{ stock }}')">×</span></span>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="newStock" placeholder="Search or add stock symbol (e.g., TCS)" oninput="searchStocks(this.value)">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="addStock()">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                            <div id="stockSuggestions" class="dropdown-menu w-100" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+                                            <div class="form-text">Search for NSE stocks or add manually. Selected stocks will be monitored.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="buyThreshold" class="form-label">Buy Threshold (%)</label>
+                                            <input type="number" step="0.1" class="form-control" id="buyThreshold"
+                                                   value="{{ current_settings.buy_threshold_percent }}">
+                                            <div class="form-text">Percentage drop to trigger buy signals</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="sellThreshold" class="form-label">Sell Threshold (%)</label>
+                                            <input type="number" step="0.1" class="form-control" id="sellThreshold"
+                                                   value="{{ current_settings.sell_threshold_percent }}">
+                                            <div class="form-text">Percentage gain to trigger sell signals</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="maxPositionSize" class="form-label">Max Position Size (₹)</label>
+                                            <input type="number" class="form-control" id="maxPositionSize"
+                                                   value="{{ current_settings.max_position_size }}">
+                                            <div class="form-text">Maximum amount to invest per position</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="stopLossPercent" class="form-label">Stop Loss (%)</label>
+                                            <input type="number" step="0.1" class="form-control" id="stopLossPercent"
+                                                   value="{{ current_settings.stop_loss_percent }}">
+                                            <div class="form-text">Stop-loss percentage for risk management</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email Configuration -->
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <h4><i class="fas fa-envelope me-2"></i>Email Configuration</h4>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="emailUsername" class="form-label">Email Username</label>
+                                            <input type="email" class="form-control" id="emailUsername"
+                                                   value="{{ current_settings.email_username }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="emailPassword" class="form-label">Email Password/App Password</label>
+                                            <input type="password" class="form-control" id="emailPassword"
+                                                   placeholder="Enter app password for Gmail">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="recipientEmail" class="form-label">Recipient Email</label>
+                                    <input type="email" class="form-control" id="recipientEmail"
+                                           value="{{ current_settings.recipient_email }}">
+                                    <div class="form-text">Email address to receive reports</div>
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp Configuration -->
+                            <div class="settings-section">
+                                <div class="settings-header">
+                                    <h4><i class="fab fa-whatsapp me-2"></i>WhatsApp Configuration</h4>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="whatsappEnabled"
+                                               {% if current_settings.whatsapp_enabled %}checked{% endif %}>
+                                        <label class="form-check-label" for="whatsappEnabled">
+                                            Enable WhatsApp notifications
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="whatsappSettings" style="{% if not current_settings.whatsapp_enabled %}display: none;{% endif %}">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="twilioAccountSid" class="form-label">Twilio Account SID</label>
+                                                <input type="text" class="form-control" id="twilioAccountSid"
+                                                       placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="twilioAuthToken" class="form-label">Twilio Auth Token</label>
+                                                <input type="password" class="form-control" id="twilioAuthToken"
+                                                       placeholder="Enter your auth token">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="whatsappRecipient" class="form-label">Recipient Phone Number</label>
+                                        <input type="tel" class="form-control" id="whatsappRecipient"
+                                               placeholder="+1234567890" value="{{ current_settings.whatsapp_recipient }}">
+                                        <div class="form-text">Include country code (e.g., +91 for India)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" onclick="testConnections()">
+                                    <i class="fas fa-vial me-2"></i>Test Connections
+                                </button>
+                                <div>
+                                    <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
+                                        <i class="fas fa-undo me-2"></i>Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-custom">
+                                        <i class="fas fa-save me-2"></i>Save Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStocks = {{ current_settings.default_stocks|tojson }};
+
+        document.getElementById('whatsappEnabled').addEventListener('change', function() {
+            document.getElementById('whatsappSettings').style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                default_stocks: currentStocks,
+                buy_threshold_percent: parseFloat(document.getElementById('buyThreshold').value),
+                sell_threshold_percent: parseFloat(document.getElementById('sellThreshold').value),
+                max_position_size: parseFloat(document.getElementById('maxPositionSize').value),
+                stop_loss_percent: parseFloat(document.getElementById('stopLossPercent').value),
+                email_username: document.getElementById('emailUsername').value,
+                email_password: document.getElementById('emailPassword').value,
+                recipient_email: document.getElementById('recipientEmail').value,
+                whatsapp_enabled: document.getElementById('whatsappEnabled').checked,
+                twilio_account_sid: document.getElementById('twilioAccountSid').value,
+                twilio_auth_token: document.getElementById('twilioAuthToken').value,
+                whatsapp_recipient: document.getElementById('whatsappRecipient').value
+            };
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Settings saved successfully!');
+                    location.reload();
+                } else {
+                    alert('Error saving settings: ' + result.detail);
+                }
+            } catch (error) {
+                alert('Error saving settings: ' + error.message);
+            }
+        });
+
+        function addStock() {
+            const newStock = document.getElementById('newStock').value.trim().toUpperCase();
+            if (newStock && !currentStocks.includes(newStock)) {
+                currentStocks.push(newStock);
+                updateStockDisplay();
+            }
+            document.getElementById('newStock').value = '';
+            document.getElementById('stockSuggestions').style.display = 'none';
+        }
+
+        function removeStock(stock) {
+            currentStocks = currentStocks.filter(s => s !== stock);
+            updateStockDisplay();
+        }
+
+        function updateStockDisplay() {
+            const stockList = document.getElementById('stockList');
+            stockList.innerHTML = currentStocks.map(stock =>
+                `<span class="stock-tag">${stock}<span class="remove" onclick="removeStock('${stock}')">×</span></span>`
+            ).join('');
+        }
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                location.reload();
+            }
+        }
+
+        async function testConnections() {
+            let results = [];
+
+            // Test email connection
+            try {
+                const emailResponse = await fetch('/api/reports/email', { method: 'POST' });
+                if (emailResponse.ok) {
+                    results.push('✅ Email connection successful');
+                } else {
+                    results.push('❌ Email connection failed');
+                }
+            } catch (error) {
+                results.push('❌ Email connection error: ' + error.message);
+            }
+
+            // Test WhatsApp connection
+            if (document.getElementById('whatsappEnabled').checked) {
+                try {
+                    const whatsappResponse = await fetch('/api/reports/whatsapp', { method: 'POST' });
+                    if (whatsappResponse.ok) {
+                        results.push('✅ WhatsApp connection successful');
+                    } else {
+                        results.push('❌ WhatsApp connection failed');
+                    }
+                } catch (error) {
+                    results.push('❌ WhatsApp connection error: ' + error.message);
+                }
+            }
+
+            alert(results.join('\n'));
+        }
+
+        // Enter key support for adding stocks
+        document.getElementById('newStock').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addStock();
+            }
+        });
+
+        async function searchStocks(query) {
+            if (query.length < 2) {
+                document.getElementById('stockSuggestions').style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/stocks/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                const suggestions = document.getElementById('stockSuggestions');
+                suggestions.innerHTML = '';
+
+                if (data.stocks && data.stocks.length > 0) {
+                    data.stocks.forEach(stock => {
+                        if (!currentStocks.includes(stock)) {
+                            const item = document.createElement('a');
+                            item.className = 'dropdown-item';
+                            item.href = '#';
+                            item.textContent = stock;
+                            item.onclick = () => addStockFromSearch(stock);
+                            suggestions.appendChild(item);
+                        }
+                    });
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('stockSuggestions').style.display = 'none';
+            }
+        }
+
+        function addStockFromSearch(stock) {
+            if (!currentStocks.includes(stock)) {
+                currentStocks.push(stock);
+                updateStockDisplay();
+            }
+            document.getElementById('newStock').value = '';
+            document.getElementById('stockSuggestions').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Trade Genius Agent Application
+  trade_genius_agent:
+    build: .
+    container_name: trade_genius_agent
+    environment:
+      - DATABASE_URL=sqlite:///./trade_genius.db
+      - KITE_API_KEY=${KITE_API_KEY}
+      - KITE_API_SECRET=${KITE_API_SECRET}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RECIPIENT_EMAIL=${RECIPIENT_EMAIL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - HOST=0.0.0.0
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    networks:
+      - trade_genius_network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./charts:/app/charts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  trade_genius_network:
+    driver: bridge

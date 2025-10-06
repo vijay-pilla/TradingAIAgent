@@ -1,0 +1,58 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.0.3
+python-multipart==0.0.6
+
+# Data & Trading
+yfinance==0.2.28
+pandas>=2.2.0
+numpy>=1.26.0
+requests==2.31.0
+
+# Machine Learning & Prediction
+scikit-learn>=1.4.0
+statsmodels>=0.14.0
+tensorflow>=2.16.0
+
+# Charting & Visualization
+matplotlib==3.8.2
+seaborn==0.13.0
+plotly==5.17.0
+
+# News & Sentiment
+beautifulsoup4==4.12.2
+textblob==0.17.1
+newspaper3k==0.2.8
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+pyodbc==5.0.1
+
+# Scheduling & Background Tasks
+apscheduler==3.10.4
+celery==5.3.4
+
+# Email & Notifications
+sendgrid==6.11.0
+twilio==8.10.3
+
+# Broker Integration
+kiteconnect==5.0.1
+
+# Security & Configuration
+python-dotenv==1.0.0
+cryptography==46.0.2
+
+# Logging & Monitoring
+loguru==0.7.2
+
+# Web Interface
+jinja2==3.1.2
+aiofiles==23.2.1
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
